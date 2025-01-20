@@ -22,7 +22,14 @@ public class PlayerLambda {
         List<Player> players = new ArrayList();
 
         while(rs.next()) {
-            Player player = Player.builder().id(rs.getInt("id")).firstName(rs.getString("first_name")).lastName(rs.getString("last_name")).batHand(rs.getString("bat_hand")).throwHand(rs.getString("throw_hand")).height(rs.getString("height")).weight(rs.getInt("weight")).build();
+            Player player = Player.builder()
+                    .id(rs.getInt("id"))
+                    .firstName(rs.getString("first_name"))
+                    .lastName(rs.getString("last_name"))
+                    .batHand(rs.getString("bat_hand"))
+                    .throwHand(rs.getString("throw_hand"))
+                    .height(rs.getString("height"))
+                    .weight(rs.getInt("weight")).build();
             players.add(player);
         }
 

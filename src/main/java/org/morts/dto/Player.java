@@ -2,9 +2,10 @@ package org.morts.dto;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.Value;
 
-@Data
 @Builder
+@Value
 public class Player {
     private Integer id;
     private String firstName;
