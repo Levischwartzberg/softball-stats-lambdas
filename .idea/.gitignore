@@ -9,4 +9,5 @@
 # Zeppelin ignored files
 /ZeppelinRemoteNotebooks/
 
-target/
+/target/
+*/target/**
