@@ -9,4 +9,4 @@
 # Zeppelin ignored files
 /ZeppelinRemoteNotebooks/
 
-/target/classes/Main
+target/
