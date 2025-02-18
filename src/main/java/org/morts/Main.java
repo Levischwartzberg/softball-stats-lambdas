@@ -1,12 +1,8 @@
 package org.morts;
 
-import org.morts.dto.Player;
-import org.morts.lambdas.PlayerLambda;
-import org.morts.lambdas.PlayerLifetimeStatsLambda;
 import org.morts.util.Statline;
 
 import java.sql.SQLException;
-import java.util.List;
 
 public class Main {
 

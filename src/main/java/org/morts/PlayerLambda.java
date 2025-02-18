@@ -1,4 +1,4 @@
-package org.morts.lambdas;
+package org.morts;
 
 import org.morts.dto.Player;
 
