@@ -1,11 +1,11 @@
 package org.morts.dto;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Value;
+import lombok.*;
 
 @Builder
-@Value
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Player {
     private Integer id;
     private String firstName;
