@@ -1,7 +1,13 @@
 package org.morts.util;
 
+import org.morts.domain.Season;
+import org.morts.dto.SeasonStatline;
+import org.morts.dto.Statline;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class StatCalculatorUtil {
     public static double calculateOBP(Integer hits, Integer atBats, Integer walks) {
@@ -10,6 +16,49 @@ public final class StatCalculatorUtil {
 
     public static double calculateSLG(Integer singles, Integer doubles, Integer triples, Integer homeruns, Integer atBats) {
         return (1.0 * (double)singles + 2.0 * (double)doubles + 3.0 * (double)triples + 4.0 * (double)homeruns) / (double)atBats;
+    }
+
+    public static List<SeasonStatline> getSeasonStats(ResultSet rs) throws SQLException {
+
+        List<SeasonStatline> seasonStatlines = new ArrayList<>();
+
+        while (rs.next()) {
+            int hits = rs.getInt("hits");
+            int singles = rs.getInt("singles");
+            int doubles = rs.getInt("doubles");
+            int triples = rs.getInt("triples");
+            int homeruns = rs.getInt("homeruns");
+            int walks = rs.getInt("walks");
+            int atBats = rs.getInt("at_bats");
+
+            SeasonStatline seasonStatline = SeasonStatline.builder()
+                    .statline(
+                            Statline.builder()
+                                    .atBats(atBats)
+                                    .hits(hits)
+                                    .singles(singles)
+                                    .doubles(doubles)
+                                    .triples(triples)
+                                    .homeruns(homeruns)
+                                    .walks(walks)
+                                    .rbi(rs.getInt("rbi"))
+                                    .runs(rs.getInt("runs"))
+                                    .avg((double) hits / (double) atBats)
+                                    .obp(calculateOBP(hits, atBats, walks))
+                                    .slg(calculateSLG(singles, doubles, triples, homeruns, atBats))
+                                    .ops(calculateOBP(hits, atBats, walks) + calculateSLG(singles, doubles, triples, homeruns, atBats))
+                                    .build()
+                    )
+                    .season(
+                            Season.builder()
+                                    .id(rs.getInt("id"))
+                                    .session(rs.getString("session"))
+                                    .year(rs.getInt("year"))
+                                    .build()
+                    ).build();
+            seasonStatlines.add(seasonStatline);
+        }
+        return seasonStatlines;
     }
 
     public static Statline computeStatlineFromGameIterator(ResultSet rs) throws SQLException {

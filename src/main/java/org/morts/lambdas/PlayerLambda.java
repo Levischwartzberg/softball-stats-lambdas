@@ -1,6 +1,6 @@
-package org.morts;
+package org.morts.lambdas;
 
-import org.morts.dto.Player;
+import org.morts.domain.Player;
 
 import java.sql.*;
 import java.util.ArrayList;

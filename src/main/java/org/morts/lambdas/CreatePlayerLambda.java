@@ -1,11 +1,11 @@
-package org.morts;
+package org.morts.lambdas;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.morts.dto.Player;
+import org.morts.domain.Player;
 import org.morts.util.SqlFormatterUtil;
 
 import java.sql.*;

@@ -1,4 +1,4 @@
-package org.morts.dto;
+package org.morts.domain;
 
 import lombok.*;
 
