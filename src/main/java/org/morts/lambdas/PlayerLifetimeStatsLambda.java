@@ -1,11 +1,11 @@
-package org.morts;
+package org.morts.lambdas;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import org.morts.util.StatCalculatorUtil;
-import org.morts.util.Statline;
+import org.morts.dto.Statline;
 
 import java.sql.*;
 

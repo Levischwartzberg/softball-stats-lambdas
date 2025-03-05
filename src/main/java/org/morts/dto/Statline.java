@@ -1,4 +1,4 @@
-package org.morts.util;
+package org.morts.dto;
 
 import lombok.Builder;
 import lombok.Value;
