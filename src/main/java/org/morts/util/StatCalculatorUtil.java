@@ -1,6 +1,8 @@
 package org.morts.util;
 
+import org.morts.domain.Player;
 import org.morts.domain.Season;
+import org.morts.dto.PlayerStatline;
 import org.morts.dto.SeasonStatline;
 import org.morts.dto.Statline;
 
@@ -59,6 +61,49 @@ public final class StatCalculatorUtil {
             seasonStatlines.add(seasonStatline);
         }
         return seasonStatlines;
+    }
+
+    public static List<PlayerStatline> getSeasonTeamStats(ResultSet rs) throws SQLException {
+
+        List<PlayerStatline> playerStatlines = new ArrayList<>();
+
+        while (rs.next()) {
+            int hits = rs.getInt("hits");
+            int singles = rs.getInt("singles");
+            int doubles = rs.getInt("doubles");
+            int triples = rs.getInt("triples");
+            int homeruns = rs.getInt("homeruns");
+            int walks = rs.getInt("walks");
+            int atBats = rs.getInt("at_bats");
+
+            PlayerStatline playerStatline = PlayerStatline.builder()
+                    .statline(
+                            Statline.builder()
+                                    .atBats(atBats)
+                                    .hits(hits)
+                                    .singles(singles)
+                                    .doubles(doubles)
+                                    .triples(triples)
+                                    .homeruns(homeruns)
+                                    .walks(walks)
+                                    .rbi(rs.getInt("rbi"))
+                                    .runs(rs.getInt("runs"))
+                                    .avg((double) hits / (double) atBats)
+                                    .obp(calculateOBP(hits, atBats, walks))
+                                    .slg(calculateSLG(singles, doubles, triples, homeruns, atBats))
+                                    .ops(calculateOBP(hits, atBats, walks) + calculateSLG(singles, doubles, triples, homeruns, atBats))
+                                    .build()
+                    )
+                    .player(
+                            Player.builder()
+                                    .id(rs.getInt("player_id"))
+                                    .lastName(rs.getString("last_name"))
+                                    .firstName(rs.getString("first_name"))
+                                    .build()
+                    ).build();
+            playerStatlines.add(playerStatline);
+        }
+        return playerStatlines;
     }
 
     public static Statline computeStatlineFromGameIterator(ResultSet rs) throws SQLException {
