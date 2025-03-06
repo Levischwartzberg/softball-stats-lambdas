@@ -1,5 +1,6 @@
 package org.morts.dto;
 
+import com.google.gson.Gson;
 import lombok.Builder;
 import lombok.Value;
 
@@ -21,5 +22,11 @@ public class Statline {
     private double obp;
     private double slg;
     private double ops;
+
+    @Override
+    public String toString() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
 }
 
