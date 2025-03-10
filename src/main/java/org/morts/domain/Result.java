@@ -1,5 +1,6 @@
 package org.morts.domain;
 
+import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,4 +19,10 @@ public class Result {
     private String result;
     private String score;
     private Date date;
+
+    @Override
+    public String toString() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
 }

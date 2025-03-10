@@ -1,5 +1,6 @@
 package org.morts.domain;
 
+import com.google.gson.Gson;
 import lombok.*;
 
 @Builder
@@ -17,4 +18,9 @@ public class Player {
     private String batHand;
     private String throwHand;
 
+    @Override
+    public String toString() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
 }
