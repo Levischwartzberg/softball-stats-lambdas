@@ -74,6 +74,7 @@ public class PlayerGameLogLambda implements RequestHandler<APIGatewayProxyReques
                     .statline(
                             Statline.builder()
                                     .atBats(rs.getInt("at_bats"))
+                                    .lineupSpot(rs.getInt("lineup_spot"))
                                     .hits(rs.getInt("hits"))
                                     .singles(rs.getInt("singles"))
                                     .doubles(rs.getInt("doubles"))
