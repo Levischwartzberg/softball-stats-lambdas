@@ -46,7 +46,7 @@ public class SeasonTeamStatsLambda implements RequestHandler<APIGatewayProxyRequ
     public List<PlayerStatline> getSeasonTeamStats(Integer seasonId) throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-        PreparedStatement preparedStatement = connection.prepareStatement("select p.id as player_id, p.last_name as last_name, p.first_name as first_name,\n" +
+        PreparedStatement preparedStatement = connection.prepareStatement("select count(*) as games, p.id as player_id, p.last_name as last_name, p.first_name as first_name,\n" +
                         "       sum(g.at_Bats) as at_bats,\n" +
                         "       sum(g.hits) as hits,\n" +
                         "       sum(g.singles) as singles,\n" +
