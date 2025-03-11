@@ -52,13 +52,13 @@ public class TeamLifetimeStatsLambda implements RequestHandler<APIGatewayProxyRe
     public List<PlayerStatline> getTeamLifetimeStats(String field, Integer value) throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-        PreparedStatement preparedStatement = connection.prepareStatement("select * from (select p.last_name, p.first_name, p.id as player_id,\n" +
+        PreparedStatement preparedStatement = connection.prepareStatement("select * from (select count(*) as games, p.last_name, p.first_name, p.id as player_id,\n" +
                 "       sum(g.at_bats) as at_bats, sum(g.hits) as hits, sum(g.singles) as singles,\n" +
                 "       sum(g.doubles) as doubles, sum(g.triples) as triples, sum(g.homeruns) as homeruns,\n" +
                 "       sum(g.walks) as walks, sum(g.rbi) as rbi, sum(g.runs) as runs from game g\n" +
                 "left join player p on p.id = g.player_id\n" +
                 "group by p.id\n" +
-                "order by at_bats desc) as team_stats where team_stats." +field + "  >"  + value + ";");
+                "order by games desc) as team_stats where team_stats." +field + "  >"  + value + ";");
         ResultSet rs = preparedStatement.executeQuery();
         return StatCalculatorUtil.getSeasonTeamStats(rs);
     }
