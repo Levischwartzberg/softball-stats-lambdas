@@ -63,8 +63,17 @@ public class CreatePlayerLambda implements RequestHandler<APIGatewayProxyRequest
                     SqlFormatterUtil.formatString(player.getBirthdate()),
                     SqlFormatterUtil.formatString(player.getImageUrl()));
             PreparedStatement preparedStatement = connection.prepareStatement("insert into player (first_name, last_name, height, weight, bat_hand, throw_hand, birthdate, image_url) \n" +
-                    "values" + playerValues);
-            preparedStatement.executeUpdate();
+                    "values" + playerValues, Statement.RETURN_GENERATED_KEYS);
+
+            int updatedRows = preparedStatement.executeUpdate();
+
+            if (updatedRows > 0) {
+                ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    int id = generatedKeys.getInt(1);
+                    player.setId(id);
+                }
+            }
         }
 
         return player;

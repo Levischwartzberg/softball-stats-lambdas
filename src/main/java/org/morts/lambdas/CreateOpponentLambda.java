@@ -8,10 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.morts.domain.Opponent;
 import org.morts.util.SqlFormatterUtil;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Map;
 
 public class CreateOpponentLambda implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -59,8 +56,17 @@ public class CreateOpponentLambda implements RequestHandler<APIGatewayProxyReque
             String teamValues = String.format("(%s)",
                     SqlFormatterUtil.formatString(opponent.getTeamName()));
             PreparedStatement preparedStatement = connection.prepareStatement("insert into opponent (team_name) \n" +
-                    "values" + teamValues);
-            preparedStatement.executeUpdate();
+                    "values" + teamValues, Statement.RETURN_GENERATED_KEYS);
+
+            int updatedRows = preparedStatement.executeUpdate();
+
+            if (updatedRows > 0) {
+                ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    int id = generatedKeys.getInt(1);
+                    opponent.setId(id);
+                }
+            }
         }
 
         return opponent;
