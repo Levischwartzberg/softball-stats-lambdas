@@ -15,7 +15,7 @@ public enum ResultENUM {
     @JsonProperty("Walk")
     WALK,
     @JsonProperty("Out(s)")
-    OUTS,
+    OUT,
     @JsonProperty("Error")
     ERROR
 }

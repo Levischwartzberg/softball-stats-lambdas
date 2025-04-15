@@ -135,7 +135,7 @@ public class CreateScorekeepingGameLambda implements RequestHandler<APIGatewayPr
                         Optional.ofNullable(atBatDTO.getBaserunners().getSecond()).map(Player::getId).orElse(null),
                         Optional.ofNullable(atBatDTO.getBaserunners().getThird()).map(Player::getId).orElse(null),
                         atBatDTO.getResult().equals(ResultENUM.WALK) ? 0 : 1,
-                        (atBatDTO.getResult().equals(ResultENUM.WALK) || atBatDTO.getResult().equals(ResultENUM.OUTS) || atBatDTO.getResult().equals(ResultENUM.ERROR)) ? 0 : 1,
+                        (atBatDTO.getResult().equals(ResultENUM.WALK) || atBatDTO.getResult().equals(ResultENUM.OUT) || atBatDTO.getResult().equals(ResultENUM.ERROR)) ? 0 : 1,
                         atBatDTO.getResult().equals(ResultENUM.SINGLE) ? 1 : 0,
                         atBatDTO.getResult().equals(ResultENUM.DOUBLE) ? 1 : 0,
                         atBatDTO.getResult().equals(ResultENUM.TRIPLE) ? 1 : 0,
