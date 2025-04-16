@@ -17,13 +17,13 @@ public class PlayerLambda {
     public List<Player> getPlayers() throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-        PreparedStatement preparedStatement = connection.prepareStatement("select * from player");
+        PreparedStatement preparedStatement = connection.prepareStatement("select * from players");
         ResultSet rs = preparedStatement.executeQuery();
         List<Player> players = new ArrayList();
 
         while(rs.next()) {
             Player player = Player.builder()
-                    .id(rs.getInt("id"))
+                    .id(rs.getInt("player_id"))
                     .firstName(rs.getString("first_name"))
                     .lastName(rs.getString("last_name"))
                     .batHand(rs.getString("bat_hand"))

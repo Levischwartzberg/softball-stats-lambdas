@@ -17,13 +17,13 @@ public class SeasonLambda {
     public List<Season> getSeasons() throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-        PreparedStatement preparedStatement = connection.prepareStatement("select * from season");
+        PreparedStatement preparedStatement = connection.prepareStatement("select * from seasons");
         ResultSet rs = preparedStatement.executeQuery();
         List<Season> seasons = new ArrayList();
 
         while(rs.next()) {
             Season season = Season.builder()
-                    .id(rs.getInt("id"))
+                    .id(rs.getInt("season_id"))
                     .session(rs.getString("session"))
                     .year(rs.getInt("year"))
                     .build();

@@ -53,16 +53,15 @@ public class CreatePlayerLambda implements RequestHandler<APIGatewayProxyRequest
         Class.forName("com.mysql.cj.jdbc.Driver");
 
         try (Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword)) {
-            String playerValues = String.format("(%s, %s, %s, %s, %s, %s, %s, %s)",
+            String playerValues = String.format("(%s, %s, %s, %s, %s, %s, %s)",
                     SqlFormatterUtil.formatString(player.getFirstName()),
                     SqlFormatterUtil.formatString(player.getLastName()),
                     SqlFormatterUtil.formatString(player.getHeight()),
                     player.getWeight(),
                     SqlFormatterUtil.formatString(player.getBatHand()),
                     SqlFormatterUtil.formatString(player.getThrowHand()),
-                    SqlFormatterUtil.formatString(player.getBirthdate()),
-                    SqlFormatterUtil.formatString(player.getImageUrl()));
-            PreparedStatement preparedStatement = connection.prepareStatement("insert into player (first_name, last_name, height, weight, bat_hand, throw_hand, birthdate, image_url) \n" +
+                    SqlFormatterUtil.formatString(player.getBirthdate()));
+            PreparedStatement preparedStatement = connection.prepareStatement("insert into players (first_name, last_name, height, weight, bat_hand, throw_hand, birthdate) \n" +
                     "values" + playerValues, Statement.RETURN_GENERATED_KEYS);
 
             int updatedRows = preparedStatement.executeUpdate();
