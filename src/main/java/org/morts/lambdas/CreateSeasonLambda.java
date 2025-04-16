@@ -56,7 +56,7 @@ public class CreateSeasonLambda implements RequestHandler<APIGatewayProxyRequest
             String seasonValues = String.format("(%s, %s)",
                     SqlFormatterUtil.formatString(season.getSession()),
                     season.getYear());
-            PreparedStatement preparedStatement = connection.prepareStatement("insert into season (session, year) \n" +
+            PreparedStatement preparedStatement = connection.prepareStatement("insert into seasons (session, year) \n" +
                     "values" + seasonValues, Statement.RETURN_GENERATED_KEYS);
 
             int updatedRows = preparedStatement.executeUpdate();

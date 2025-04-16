@@ -12,7 +12,6 @@ public class Player {
     private String firstName;
     private String lastName;
     private String birthdate;
-    private String imageUrl;
     private String height;
     private Integer weight;
     private String batHand;

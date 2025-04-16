@@ -55,7 +55,7 @@ public class CreateOpponentLambda implements RequestHandler<APIGatewayProxyReque
         try (Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword)) {
             String teamValues = String.format("(%s)",
                     SqlFormatterUtil.formatString(opponent.getTeamName()));
-            PreparedStatement preparedStatement = connection.prepareStatement("insert into opponent (team_name) \n" +
+            PreparedStatement preparedStatement = connection.prepareStatement("insert into opponents (team_name) \n" +
                     "values" + teamValues, Statement.RETURN_GENERATED_KEYS);
 
             int updatedRows = preparedStatement.executeUpdate();

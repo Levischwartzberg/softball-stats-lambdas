@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.morts.domain.Opponent;
 import org.morts.dto.AtBatDTO;
 import org.morts.dto.GameInfoDTO;
 import org.morts.dto.InningDTO;
@@ -66,11 +67,11 @@ public class CreateScorekeepingGameLambda implements RequestHandler<APIGatewayPr
                     gameInfoDTO.getHome(),
                     gameInfoDTO.getRunsFor(),
                     gameInfoDTO.getRunsAgainst(),
-                    gameInfoDTO.getOpponent().getId(),
+                    Optional.ofNullable(gameInfoDTO.getOpponent()).map(Opponent::getId).orElse(null),
                     SqlFormatterUtil.formatString(new java.sql.Timestamp(gameInfoDTO.getDate().getTime()).toString()),
                     SqlFormatterUtil.formatString(gameInfoDTO.getField()),
                     gameInfoDTO.getTemperature(),
-                    SqlFormatterUtil.formatString(String.join(",", gameInfoDTO.getWeatherConditions())),
+                    gameInfoDTO.getWeatherConditions() != null ? SqlFormatterUtil.formatString(String.join(",", gameInfoDTO.getWeatherConditions())) : null,
                     SqlFormatterUtil.formatString(gameInfoDTO.getGameNotes()));
             PreparedStatement preparedStatement = connection.prepareStatement("insert into game_info (season_id, home_away, runs_for, runs_against, opponent_id, game_date_time, field, temperature, weather_conditions, game_notes) \n" +
                     "values" + gameInfoValues, Statement.RETURN_GENERATED_KEYS);
