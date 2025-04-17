@@ -46,23 +46,23 @@ public class SeasonTeamStatsLambda implements RequestHandler<APIGatewayProxyRequ
     public List<PlayerStatline> getSeasonTeamStats(Integer seasonId) throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-        PreparedStatement preparedStatement = connection.prepareStatement("select count(*) as games, p.id as player_id, p.last_name as last_name, p.first_name as first_name,\n" +
-                        "       sum(g.at_Bats) as at_bats,\n" +
-                        "       sum(g.hits) as hits,\n" +
-                        "       sum(g.singles) as singles,\n" +
-                        "       sum(g.doubles) as doubles,\n" +
-                        "       sum(g.triples) as triples,\n" +
-                        "       sum(g.homeruns) as homeruns,\n" +
-                        "       sum(g.walks) as walks,\n" +
-                        "       sum(g.runs) as runs,\n" +
-                        "       sum(g.rbi) as rbi\n" +
-                        "from game g\n" +
-                        "left join player p on g.player_id = p.id\n" +
-                        "left join result r on g.result_id = r.id\n" +
-                        "left join season s on r.season_id = s.id\n" +
-                        "where s.id = " + seasonId + " \n" +
-                        "group by player_id\n" +
-                        "order by at_bats desc;");
+        PreparedStatement preparedStatement = connection.prepareStatement("select at_bats_with_rbi.player_id as player_id, at_bats_with_rbi.first_name, at_bats_with_rbi.last_name, count(distinct at_bats_with_rbi.game_info_id) as games, sum(at_bats_with_rbi.ab) as at_bats, sum(at_bats_with_rbi.hit) as hits, sum(at_bats_with_rbi.single) as singles, sum(at_bats_with_rbi.`double`) as doubles, sum(at_bats_with_rbi.triple) as triples, sum(at_bats_with_rbi.homerun) as homeruns, sum(at_bats_with_rbi.walk) as walks, sum(at_bats_with_rbi.rbi) as rbi, runs\n" +
+                "from (select p.first_name, p.last_name, ab, hit, single, `double`, triple, homerun, walk, at_bats.player_id, abr.rbi as rbi, gi.game_info_id as game_info_id from at_bats\n" +
+                "left join innings i on at_bats.inning_id = i.inning_id\n" +
+                "left join game_info gi on i.game_info_id = gi.game_info_id\n" +
+                "left join players p on at_bats.player_id = p.player_id\n" +
+                "left join (select count(*) as rbi, at_bat_id from at_bat_runs group by at_bat_id) abr on at_bats.at_bat_id = abr.at_bat_id\n" +
+                "where gi.season_id = ?) as at_bats_with_rbi\n" +
+                "left join (select count(*) as runs, at_bat_runs.player_id from at_bat_runs\n" +
+                "inner join at_bats a on at_bat_runs.at_bat_id = a.at_bat_id\n" +
+                "inner join innings i2 on a.inning_id = i2.inning_id\n" +
+                "inner join game_info g on i2.game_info_id = g.game_info_id\n" +
+                "where g.season_id = ?\n" +
+                "group by at_bat_runs.player_id) abrs on at_bats_with_rbi.player_id = abrs.player_id\n" +
+                "group by at_bats_with_rbi.first_name, at_bats_with_rbi.last_name\n" +
+                "order by at_bats desc;");
+        preparedStatement.setInt(1, seasonId);
+        preparedStatement.setInt(2, seasonId);
         ResultSet rs = preparedStatement.executeQuery();
         return StatCalculatorUtil.getSeasonTeamStats(rs);
     }

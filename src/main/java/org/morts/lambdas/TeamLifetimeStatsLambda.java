@@ -52,13 +52,19 @@ public class TeamLifetimeStatsLambda implements RequestHandler<APIGatewayProxyRe
     public List<PlayerStatline> getTeamLifetimeStats(String field, Integer value) throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-        PreparedStatement preparedStatement = connection.prepareStatement("select * from (select count(*) as games, p.last_name, p.first_name, p.id as player_id,\n" +
-                "       sum(g.at_bats) as at_bats, sum(g.hits) as hits, sum(g.singles) as singles,\n" +
-                "       sum(g.doubles) as doubles, sum(g.triples) as triples, sum(g.homeruns) as homeruns,\n" +
-                "       sum(g.walks) as walks, sum(g.rbi) as rbi, sum(g.runs) as runs from game g\n" +
-                "left join player p on p.id = g.player_id\n" +
-                "group by p.id\n" +
-                "order by games desc) as team_stats where team_stats." +field + "  >"  + value + ";");
+        PreparedStatement preparedStatement = connection.prepareStatement("select * from (\n" +
+                "select at_bats_with_rbi.player_id as player_id, at_bats_with_rbi.first_name, at_bats_with_rbi.last_name, count(distinct at_bats_with_rbi.game_info_id) as games, sum(at_bats_with_rbi.ab) as at_bats, sum(at_bats_with_rbi.hit) as hits, sum(at_bats_with_rbi.single) as singles, sum(at_bats_with_rbi.`double`) as doubles, sum(at_bats_with_rbi.triple) as triples, sum(at_bats_with_rbi.homerun) as homeruns, sum(at_bats_with_rbi.walk) as walks, sum(at_bats_with_rbi.rbi) as rbi, runs\n" +
+                "from (select p.first_name, p.last_name, ab, hit, single, `double`, triple, homerun, walk, at_bats.player_id, abr.rbi as rbi, i.game_info_id as game_info_id from at_bats\n" +
+                "left join innings i on at_bats.inning_id = i.inning_id\n" +
+                "left join players p on at_bats.player_id = p.player_id\n" +
+                "left join (select count(*) as rbi, at_bat_id from at_bat_runs group by at_bat_id) abr on at_bats.at_bat_id = abr.at_bat_id) as at_bats_with_rbi\n" +
+                "left join (select count(*) as runs, at_bat_runs.player_id from at_bat_runs\n" +
+                "inner join at_bats a on at_bat_runs.at_bat_id = a.at_bat_id\n" +
+                "group by at_bat_runs.player_id) abrs on at_bats_with_rbi.player_id = abrs.player_id\n" +
+                "group by at_bats_with_rbi.player_id\n" +
+                "order by at_bats desc\n" +
+                ") as team_lifetime_stats\n" +
+                "where team_lifetime_stats." + field + "> " + value + ";");
         ResultSet rs = preparedStatement.executeQuery();
         return StatCalculatorUtil.getSeasonTeamStats(rs);
     }

@@ -70,7 +70,6 @@ public final class StatCalculatorUtil {
         List<PlayerStatline> playerStatlines = new ArrayList<>();
 
         while (rs.next()) {
-            int games = rs.getInt("games");
             int hits = rs.getInt("hits");
             int singles = rs.getInt("singles");
             int doubles = rs.getInt("doubles");
@@ -82,7 +81,7 @@ public final class StatCalculatorUtil {
             PlayerStatline playerStatline = PlayerStatline.builder()
                     .statline(
                             Statline.builder()
-                                    .games(games)
+                                    .games(rs.getInt("games"))
                                     .atBats(atBats)
                                     .hits(hits)
                                     .singles(singles)
