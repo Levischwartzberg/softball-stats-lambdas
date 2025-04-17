@@ -55,7 +55,7 @@ public final class StatCalculatorUtil {
                     )
                     .season(
                             Season.builder()
-                                    .id(rs.getInt("id"))
+                                    .id(rs.getInt("season_id"))
                                     .session(rs.getString("session"))
                                     .year(rs.getInt("year"))
                                     .build()
