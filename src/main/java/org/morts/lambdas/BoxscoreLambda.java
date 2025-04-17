@@ -4,15 +4,18 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import org.morts.domain.Opponent;
 import org.morts.domain.Player;
 import org.morts.domain.Result;
 import org.morts.dto.Boxscore;
+import org.morts.dto.GameInfoDTO;
 import org.morts.dto.PlayerStatline;
 import org.morts.dto.Statline;
+import org.morts.util.StatCalculatorUtil;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.Date;
 
 public class BoxscoreLambda implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -47,61 +50,105 @@ public class BoxscoreLambda implements RequestHandler<APIGatewayProxyRequestEven
     public BoxscoreLambda() {
     }
 
-    public Boxscore getBoxscore(Integer resultId) throws SQLException, ClassNotFoundException {
+    public Boxscore getBoxscore(Integer gameInfoId) throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-        PreparedStatement preparedStatement = connection.prepareStatement("select p.id as player_id, p.first_name as first_name, p.last_name as last_name,\n" +
-                "       r.date as date, r.score as score, r.result as result,\n" +
-                "       g.* from game g\n" +
-                "left join player p on g.player_id = p.id\n" +
-                "left join result r on g.result_id = r.id\n" +
-                "where g.result_id = " + resultId + " \n" +
-                "order by g.lineup_spot asc;");
-        ResultSet rs = preparedStatement.executeQuery();
+        PreparedStatement preparedStatement = connection.prepareStatement("select at_bats_with_rbi.player_id as player_id, at_bats_with_rbi.first_name, at_bats_with_rbi.last_name, sum(at_bats_with_rbi.ab) as at_bats, sum(at_bats_with_rbi.hit) as hits, sum(at_bats_with_rbi.single) as singles, sum(at_bats_with_rbi.`double`) as doubles, sum(at_bats_with_rbi.triple) as triples, sum(at_bats_with_rbi.homerun) as homeruns, sum(at_bats_with_rbi.walk) as walks, sum(at_bats_with_rbi.rbi) as rbi, runs\n" +
+                "from (select p.first_name, p.last_name, ab, hit, single, `double`, triple, homerun, walk, at_bats.player_id, abr.rbi as rbi from at_bats\n" +
+                "left join innings i on at_bats.inning_id = i.inning_id\n" +
+                "left join players p on at_bats.player_id = p.player_id\n" +
+                "left join (select count(*) as rbi, at_bat_id from at_bat_runs group by at_bat_id) abr on at_bats.at_bat_id = abr.at_bat_id\n" +
+                "where i.game_info_id = ?) as at_bats_with_rbi\n" +
+                "left join (select count(*) as runs, at_bat_runs.player_id from at_bat_runs\n" +
+                "inner join at_bats a on at_bat_runs.at_bat_id = a.at_bat_id\n" +
+                "inner join innings i2 on a.inning_id = i2.inning_id\n" +
+                "where i2.game_info_id = ?\n" +
+                "group by at_bat_runs.player_id) abrs on at_bats_with_rbi.player_id = abrs.player_id\n" +
+                "group by at_bats_with_rbi.first_name, at_bats_with_rbi.last_name;");
+        preparedStatement.setInt(1, gameInfoId);
+        preparedStatement.setInt(2, gameInfoId);
+        ResultSet boxscoreRS = preparedStatement.executeQuery();
 
-        Result result = null;
+        GameInfoDTO gameInfo = null;
 
         List<PlayerStatline> playerStatlines = new ArrayList<>();
-        while (rs.next()) {
-             result = Result.builder()
-                    .id(rs.getInt("result_id"))
-                    .result(rs.getString("result"))
-                    .score(rs.getString("score"))
-                    .date(rs.getDate("date"))
-                    .build();
+        while (boxscoreRS.next()) {
+
+            int hits = boxscoreRS.getInt("hits");
+            int singles = boxscoreRS.getInt("singles");
+            int doubles = boxscoreRS.getInt("doubles");
+            int triples = boxscoreRS.getInt("triples");
+            int homeruns = boxscoreRS.getInt("homeruns");
+            int walks = boxscoreRS.getInt("walks");
+            int atBats = boxscoreRS.getInt("at_bats");
 
             PlayerStatline playerStatline = PlayerStatline.builder()
                     .player(
                             Player.builder()
-                                    .id(rs.getInt("player_id"))
-                                    .firstName(rs.getString("first_name"))
-                                    .lastName(rs.getString("last_name"))
+                                    .id(boxscoreRS.getInt("player_id"))
+                                    .firstName(boxscoreRS.getString("first_name"))
+                                    .lastName(boxscoreRS.getString("last_name"))
                                     .build()
                     )
                     .statline(
                             Statline.builder()
-                                    .atBats(rs.getInt("at_bats"))
-                                    .hits(rs.getInt("hits"))
-                                    .singles(rs.getInt("singles"))
-                                    .doubles(rs.getInt("doubles"))
-                                    .triples(rs.getInt("triples"))
-                                    .homeruns(rs.getInt("homeruns"))
-                                    .walks(rs.getInt("walks"))
-                                    .runs(rs.getInt("runs"))
-                                    .rbi(rs.getInt("rbi"))
-                                    .avg(rs.getDouble("avg"))
-                                    .obp(rs.getDouble("obp"))
-                                    .slg(rs.getDouble("slg"))
-                                    .ops(rs.getDouble("ops"))
+                                    .atBats(atBats)
+                                    .hits(hits)
+                                    .singles(singles)
+                                    .doubles(doubles)
+                                    .triples(triples)
+                                    .homeruns(homeruns)
+                                    .walks(walks)
+                                    .runs(boxscoreRS.getInt("runs"))
+                                    .rbi(boxscoreRS.getInt("rbi"))
+                                    .avg((double) hits / (double) atBats)
+                                    .obp(StatCalculatorUtil.calculateOBP(hits, atBats, walks))
+                                    .slg(StatCalculatorUtil.calculateSLG(singles, doubles, triples, homeruns, atBats))
+                                    .ops(StatCalculatorUtil.calculateOBP(hits, atBats, walks) + StatCalculatorUtil.calculateSLG(singles, doubles, triples, homeruns, atBats))
                                     .build()
                     )
                     .build();
 
             playerStatlines.add(playerStatline);
         }
+
+        PreparedStatement preparedStatement2 = connection.prepareStatement("select game_info.*, opponents.team_name as opponent_team_name from game_info\n" +
+                "left join opponents on game_info.opponent_id = opponents.opponent_id\n" +
+                "where game_info_id = ?;");
+        preparedStatement2.setInt(1, gameInfoId);
+        ResultSet gameInfoRS = preparedStatement2.executeQuery();
+        while (gameInfoRS.next()) {
+
+            gameInfo = GameInfoDTO.builder()
+                    .gameInfoId(gameInfoRS.getInt("game_info_id"))
+                    .home(determineHomeAway(gameInfoRS))
+                    .runsFor(gameInfoRS.getInt("runs_for"))
+                    .runsAgainst(gameInfoRS.getInt("runs_against"))
+                    .opponent(Opponent.builder()
+                            .id(gameInfoRS.getInt("opponent_id"))
+                            .teamName("opponent_team_name")
+                            .build())
+                    .field(gameInfoRS.getString("field"))
+                    .temperature(gameInfoRS.getInt("temperature"))
+                    .weatherConditions(Optional.ofNullable(gameInfoRS.getString("weather_conditions")).map(conditions -> conditions.split(",")).map(Arrays::asList).orElse(null))
+                    .gameNotes(gameInfoRS.getString("game_notes"))
+                    .date(gameInfoRS.getTimestamp("game_date_time"))
+                    .build();
+        }
+
         return Boxscore.builder()
-                .result(result)
+                .gameInfo(gameInfo)
                 .playerStatlines(playerStatlines)
                 .build();
+    }
+
+    private Boolean determineHomeAway(ResultSet rs) throws SQLException {
+
+        Boolean homeAway = rs.getBoolean("home_away");
+        if (rs.wasNull()) {
+            return null;
+        } else {
+            return homeAway;
+        }
     }
 }

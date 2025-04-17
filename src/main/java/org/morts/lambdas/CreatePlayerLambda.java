@@ -9,7 +9,9 @@ import org.morts.domain.Player;
 import org.morts.util.SqlFormatterUtil;
 
 import java.sql.*;
+import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 
 public class CreatePlayerLambda implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -60,7 +62,7 @@ public class CreatePlayerLambda implements RequestHandler<APIGatewayProxyRequest
                     player.getWeight(),
                     SqlFormatterUtil.formatString(player.getBatHand()),
                     SqlFormatterUtil.formatString(player.getThrowHand()),
-                    SqlFormatterUtil.formatString(player.getBirthdate()));
+                    SqlFormatterUtil.formatString(Optional.ofNullable(player.getBirthdate()).map(Date::toString).orElse(null)));
             PreparedStatement preparedStatement = connection.prepareStatement("insert into players (first_name, last_name, height, weight, bat_hand, throw_hand, birthdate) \n" +
                     "values" + playerValues, Statement.RETURN_GENERATED_KEYS);
 

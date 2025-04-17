@@ -11,7 +11,7 @@ import java.util.List;
 @Value
 public class Boxscore {
 
-    Result result;
+    GameInfoDTO gameInfo;
     List<PlayerStatline> playerStatlines;
 
     @Override
