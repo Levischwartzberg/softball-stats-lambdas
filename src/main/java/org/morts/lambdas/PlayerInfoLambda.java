@@ -43,21 +43,23 @@ public class PlayerInfoLambda implements RequestHandler<APIGatewayProxyRequestEv
     public Player getPlayer(Integer playerId) throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-        PreparedStatement preparedStatement = connection.prepareStatement("select * from player\n" +
-                "where player.id = " + playerId + ";");
+        PreparedStatement preparedStatement = connection.prepareStatement("select * from players\n" +
+                "where player_id = ?");
+        preparedStatement.setInt(1, playerId);
         ResultSet rs = preparedStatement.executeQuery();
 
         Player player = null;
         while (rs.next()) {
 
             player = Player.builder()
-                    .id(rs.getInt("id"))
+                    .id(rs.getInt("player_id"))
                     .firstName(rs.getString("first_name"))
                     .lastName(rs.getString("last_name"))
                     .height(rs.getString("height"))
                     .weight(rs.getInt("weight"))
                     .throwHand(rs.getString("throw_hand"))
                     .batHand(rs.getString("bat_hand"))
+                    .birthdate(rs.getDate("birthdate"))
                     .build();
         }
 

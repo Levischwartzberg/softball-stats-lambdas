@@ -17,17 +17,17 @@ import java.util.List;
 @NoArgsConstructor
 public class GameInfoDTO {
 
-    private Integer gameInfoId;
-    private Season season;
-    private Boolean home;
-    private Integer runsFor;
-    private Integer runsAgainst;
-    private Opponent opponent;
-    private Date date;
-    private String field;
-    private Integer temperature;
-    private List<String> weatherConditions;
-    private String gameNotes;
+    Integer gameInfoId;
+    Season season;
+    Boolean home;
+    Integer runsFor;
+    Integer runsAgainst;
+    Opponent opponent;
+    Date date;
+    String field;
+    Integer temperature;
+    List<String> weatherConditions;
+    String gameNotes;
 
     @Override
     public String toString() {

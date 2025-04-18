@@ -3,6 +3,8 @@ package org.morts.domain;
 import com.google.gson.Gson;
 import lombok.*;
 
+import java.util.Date;
+
 @Builder
 @Data
 @AllArgsConstructor
@@ -11,7 +13,7 @@ public class Player {
     private Integer id;
     private String firstName;
     private String lastName;
-    private String birthdate;
+    private Date birthdate;
     private String height;
     private Integer weight;
     private String batHand;

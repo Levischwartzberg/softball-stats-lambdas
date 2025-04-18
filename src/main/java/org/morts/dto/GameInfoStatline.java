@@ -3,16 +3,13 @@ package org.morts.dto;
 import com.google.gson.Gson;
 import lombok.Builder;
 import lombok.Value;
-import org.morts.domain.Result;
-
-import java.util.List;
 
 @Builder
 @Value
-public class Boxscore {
+public class GameInfoStatline {
 
     GameInfoDTO gameInfo;
-    List<PlayerStatline> playerStatlines;
+    Statline statline;
 
     @Override
     public String toString() {
