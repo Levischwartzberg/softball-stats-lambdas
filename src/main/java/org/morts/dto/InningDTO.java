@@ -1,5 +1,6 @@
 package org.morts.dto;
 
+import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,4 +20,9 @@ public class InningDTO {
     private Integer gameInfoId;
     List<AtBatDTO> atBats;
 
+    @Override
+    public String toString() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
 }

@@ -1,5 +1,6 @@
 package org.morts.dto;
 
+import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,4 +30,10 @@ public class AtBatDTO {
     private String ballsAndStrikes;
     private List<Player> outs;
     private List<Player> runs;
+
+    @Override
+    public String toString() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
 }
