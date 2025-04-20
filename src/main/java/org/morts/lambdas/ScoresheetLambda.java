@@ -119,6 +119,7 @@ public class ScoresheetLambda implements RequestHandler<APIGatewayProxyRequestEv
         Boolean triple = rs.getBoolean("triple");
         Boolean homerun = rs.getBoolean("homerun");
         Boolean walk = rs.getBoolean("walk");
+        Boolean skip = rs.getString("scoring").equals("Skip");
 
         ResultENUM result;
 
@@ -134,6 +135,8 @@ public class ScoresheetLambda implements RequestHandler<APIGatewayProxyRequestEv
             result = ResultENUM.SINGLE;
         } else if (walk) {
             result = ResultENUM.WALK;
+        } else if (skip) {
+            result = ResultENUM.SKIP;
         } else {
             result = ResultENUM.OUT;
         }

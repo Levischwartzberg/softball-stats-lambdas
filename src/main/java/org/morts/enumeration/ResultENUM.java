@@ -17,5 +17,7 @@ public enum ResultENUM {
     @JsonProperty("Out(s)")
     OUT,
     @JsonProperty("Error")
-    ERROR
+    ERROR,
+    @JsonProperty("Skip")
+    SKIP
 }
