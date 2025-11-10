@@ -19,5 +19,16 @@ public enum ResultENUM {
     @JsonProperty("Error")
     ERROR,
     @JsonProperty("Skip")
-    SKIP
+    SKIP;
+
+    public static ResultENUM fromString(String str) {
+        if (str == null || str.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return valueOf(str);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 }

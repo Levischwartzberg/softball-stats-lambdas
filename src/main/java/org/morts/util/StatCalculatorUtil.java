@@ -17,7 +17,7 @@ public final class StatCalculatorUtil {
     }
 
     public static double calculateSLG(Integer singles, Integer doubles, Integer triples, Integer homeruns, Integer atBats) {
-        return (1.0 * (double)singles + 2.0 * (double)doubles + 3.0 * (double)triples + 4.0 * (double)homeruns) / (double)atBats;
+        return atBats != 0 ? (1.0 * (double)singles + 2.0 * (double)doubles + 3.0 * (double)triples + 4.0 * (double)homeruns) / (double)atBats : 0;
     }
 
     public static List<SeasonStatline> getSeasonStats(ResultSet rs) throws SQLException {

@@ -6,6 +6,8 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import org.morts.domain.Player;
 import org.morts.dto.*;
+import org.morts.enumeration.LaunchAngleENUM;
+import org.morts.enumeration.RegionENUM;
 import org.morts.enumeration.ResultENUM;
 
 import java.sql.*;
@@ -153,6 +155,9 @@ public class ScoresheetLambda implements RequestHandler<APIGatewayProxyRequestEv
                 .inningIndex(rs.getInt("inning_index"))
                 .result(result)
                 .scoring(rs.getString("scoring"))
+                .region(RegionENUM.fromString(rs.getString("region")))
+                .launchAngle(LaunchAngleENUM.fromString(rs.getString("launch_angle")))
+                .exitVelocity(rs.getInt("exit_velocity"))
                 .baserunners(Baserunners.builder()
                         .first(rs.getInt("first_base") != 0 ?
                                 Player.builder()
@@ -181,25 +186,25 @@ public class ScoresheetLambda implements RequestHandler<APIGatewayProxyRequestEv
                         .build())
                 .outs(
                         rs.getInt("player_out") != 0 ?
-                                new ArrayList<>(List.of(
+                                new HashSet<>(Set.of(
                                         Player.builder()
                                                 .id(rs.getInt("player_out"))
                                                 .firstName(rs.getString("p_out.first_name"))
                                                 .lastName(rs.getString("p_out.last_name"))
                                                 .build()
                                 ))
-                                : List.of()
+                                : Set.of()
                 )
                 .runs(
                         rs.getInt("player_scored") != 0 ?
-                                new ArrayList<>(List.of(
+                                new HashSet<>(Set.of(
                                         Player.builder()
                                                 .id(rs.getInt("player_scored"))
                                                 .firstName(rs.getString("p_scored.first_name"))
                                                 .lastName(rs.getString("p_scored.last_name"))
                                                 .build()
                                 ))
-                                : List.of()
+                                : Set.of()
                 )
                 .build();
     }
