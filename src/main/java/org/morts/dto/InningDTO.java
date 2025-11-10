@@ -17,6 +17,7 @@ public class InningDTO {
     private Integer inningId;
     private Integer inning;
     private Integer opponentRuns;
+    private Integer mortsRuns;
     private Integer gameInfoId;
     List<AtBatDTO> atBats;
 

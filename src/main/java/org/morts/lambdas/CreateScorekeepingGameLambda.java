@@ -11,6 +11,8 @@ import org.morts.dto.GameInfoDTO;
 import org.morts.dto.InningDTO;
 import org.morts.domain.Player;
 import org.morts.dto.GameScorekeepingDTO;
+import org.morts.enumeration.LaunchAngleENUM;
+import org.morts.enumeration.RegionENUM;
 import org.morts.enumeration.ResultENUM;
 import org.morts.util.SqlFormatterUtil;
 
@@ -18,6 +20,7 @@ import java.sql.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class CreateScorekeepingGameLambda implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -54,7 +57,7 @@ public class CreateScorekeepingGameLambda implements RequestHandler<APIGatewayPr
         } catch (Exception e) {
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(400)
-                    .withBody("Error creating player: " + e.getMessage());
+                    .withBody("Error creating scoresheet: " + e.getMessage());
         }
     }
 
@@ -143,12 +146,12 @@ public class CreateScorekeepingGameLambda implements RequestHandler<APIGatewayPr
                         atBatDTO.getResult().equals(ResultENUM.HOMERUN) ? 1 : 0,
                         atBatDTO.getResult().equals(ResultENUM.WALK) ? 1 : 0,
                         atBatDTO.getResult().equals(ResultENUM.SKIP) ? SqlFormatterUtil.formatString("Skip") : SqlFormatterUtil.formatString(atBatDTO.getScoring()),
-                        atBatDTO.getRegion(),
-                        SqlFormatterUtil.formatString(Optional.ofNullable(atBatDTO.getLaunchAngle()).map(String::valueOf).orElse(null)),
-                        atBatDTO.getContactQuality(),
+                        SqlFormatterUtil.formatString(Optional.ofNullable(atBatDTO.getRegion()).map(RegionENUM::name).orElse(null)),
+                        SqlFormatterUtil.formatString(Optional.ofNullable(atBatDTO.getLaunchAngle()).map(LaunchAngleENUM::name).orElse(null)),
+                        atBatDTO.getExitVelocity(),
                         atBatDTO.getBallsAndStrikes()
                         );
-                PreparedStatement preparedStatement = connection.prepareStatement("insert into at_bats (player_id, inning_id, inning_index, first_base, second_base, third_base, ab, hit, single, `double`, triple, homerun, walk, scoring, region, launch_angle, contact_quality, balls_and_strikes) \n" +
+                PreparedStatement preparedStatement = connection.prepareStatement("insert into at_bats (player_id, inning_id, inning_index, first_base, second_base, third_base, ab, hit, single, `double`, triple, homerun, walk, scoring, region, launch_angle, exit_velocity, balls_and_strikes) \n" +
                         "values" + atBatValues, Statement.RETURN_GENERATED_KEYS);
 
                 int updatedRows = preparedStatement.executeUpdate();
@@ -175,7 +178,7 @@ public class CreateScorekeepingGameLambda implements RequestHandler<APIGatewayPr
         return atBatDTOS;
     }
 
-    public void createAtBatOuts(List<Player> playersOut, Integer atBatId) throws ClassNotFoundException {
+    public void createAtBatOuts(Set<Player> playersOut, Integer atBatId) throws ClassNotFoundException {
 
         playersOut.forEach(player -> {
             try (Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword)) {
@@ -193,7 +196,7 @@ public class CreateScorekeepingGameLambda implements RequestHandler<APIGatewayPr
         });
     }
 
-    public void createAtBatRuns(List<Player> playersScored, Integer atBatId) throws ClassNotFoundException {
+    public void createAtBatRuns(Set<Player> playersScored, Integer atBatId) throws ClassNotFoundException {
 
         playersScored.forEach(player -> {
             try (Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword)) {

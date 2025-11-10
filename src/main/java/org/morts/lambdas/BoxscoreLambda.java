@@ -6,16 +6,11 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import org.morts.domain.Opponent;
 import org.morts.domain.Player;
-import org.morts.domain.Result;
-import org.morts.dto.Boxscore;
-import org.morts.dto.GameInfoDTO;
-import org.morts.dto.PlayerStatline;
-import org.morts.dto.Statline;
+import org.morts.dto.*;
 import org.morts.util.StatCalculatorUtil;
 
 import java.sql.*;
 import java.util.*;
-import java.util.Date;
 
 public class BoxscoreLambda implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -101,7 +96,7 @@ public class BoxscoreLambda implements RequestHandler<APIGatewayProxyRequestEven
                                     .walks(walks)
                                     .runs(boxscoreRS.getInt("runs"))
                                     .rbi(boxscoreRS.getInt("rbi"))
-                                    .avg((double) hits / (double) atBats)
+                                    .avg(atBats != 0 ? (double) hits / (double) atBats : 0)
                                     .obp(StatCalculatorUtil.calculateOBP(hits, atBats, walks))
                                     .slg(StatCalculatorUtil.calculateSLG(singles, doubles, triples, homeruns, atBats))
                                     .ops(StatCalculatorUtil.calculateOBP(hits, atBats, walks) + StatCalculatorUtil.calculateSLG(singles, doubles, triples, homeruns, atBats))
@@ -126,7 +121,7 @@ public class BoxscoreLambda implements RequestHandler<APIGatewayProxyRequestEven
                     .runsAgainst(gameInfoRS.getInt("runs_against"))
                     .opponent(Opponent.builder()
                             .id(gameInfoRS.getInt("opponent_id"))
-                            .teamName("opponent_team_name")
+                            .teamName(gameInfoRS.getString("opponent_team_name"))
                             .build())
                     .field(gameInfoRS.getString("field"))
                     .temperature(gameInfoRS.getInt("temperature"))
@@ -136,9 +131,29 @@ public class BoxscoreLambda implements RequestHandler<APIGatewayProxyRequestEven
                     .build();
         }
 
+        PreparedStatement preparedStatement3 = connection.prepareStatement("select innings.*, count(abr.at_bat_id) as morts_runs, count(ab) as morts_at_bats from innings\n" +
+                "left join at_bats ab on innings.inning_id = ab.inning_id\n" +
+                "left join at_bat_runs abr on ab.at_bat_id = abr.at_bat_id\n" +
+                "where innings.game_info_id = ?\n" +
+                "group by innings.inning_id;");
+        preparedStatement3.setInt(1, gameInfoId);
+        ResultSet inningsRS = preparedStatement3.executeQuery();
+        List<InningDTO> innings = new ArrayList<>();
+        while (inningsRS.next()) {
+
+            InningDTO inningDTO = InningDTO.builder()
+                    .inning(inningsRS.getInt("inning"))
+                    .opponentRuns(determineOpponentRuns(inningsRS))
+                    .mortsRuns(determineMortsRuns(inningsRS))
+                    .build();
+
+            innings.add(inningDTO);
+        }
+
         return Boxscore.builder()
                 .gameInfo(gameInfo)
                 .playerStatlines(playerStatlines)
+                .innings(innings)
                 .build();
     }
 
@@ -149,6 +164,26 @@ public class BoxscoreLambda implements RequestHandler<APIGatewayProxyRequestEven
             return null;
         } else {
             return homeAway;
+        }
+    }
+
+    private Integer determineOpponentRuns(ResultSet rs) throws SQLException {
+
+        Integer opponentRuns = rs.getInt("opponent_runs");
+        if (rs.wasNull()) {
+            return null;
+        } else {
+            return opponentRuns;
+        }
+    }
+
+    private Integer determineMortsRuns(ResultSet rs) throws SQLException {
+
+        Integer opponentRuns = rs.getInt("morts_runs");
+        if (rs.getInt("morts_at_bats") == 0) {
+            return null;
+        } else {
+            return opponentRuns;
         }
     }
 }

@@ -13,6 +13,7 @@ public class Boxscore {
 
     GameInfoDTO gameInfo;
     List<PlayerStatline> playerStatlines;
+    List<InningDTO> innings;
 
     @Override
     public String toString() {
