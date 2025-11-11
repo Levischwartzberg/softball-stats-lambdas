@@ -7,10 +7,7 @@ import org.morts.dto.Boxscore;
 import org.morts.dto.GameInfoDTO;
 import org.morts.dto.GameScorekeepingDTO;
 import org.morts.dto.Scoresheet;
-import org.morts.lambdas.BoxscoreLambda;
-import org.morts.lambdas.CreateScorekeepingGameLambda;
-import org.morts.lambdas.ScoresheetLambda;
-import org.morts.lambdas.SeasonGamesLambda;
+import org.morts.lambdas.*;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -21,13 +18,13 @@ public class Main {
 
     public static void main(String[] args) throws SQLException, ClassNotFoundException, JsonProcessingException {
 
-        String dto = "";
-
-        GameScorekeepingDTO gameScorekeepingDTO = objectMapper.readValue(dto, GameScorekeepingDTO.class);
-
-        System.out.println(gameScorekeepingDTO.toString());
-
-        CreateScorekeepingGameLambda createScorekeepingGameLambda = new CreateScorekeepingGameLambda();
+//        String dto = "";
+//
+//        GameScorekeepingDTO gameScorekeepingDTO = objectMapper.readValue(dto, GameScorekeepingDTO.class);
+//
+//        System.out.println(gameScorekeepingDTO.toString());
+//
+//        CreateScorekeepingGameLambda createScorekeepingGameLambda = new CreateScorekeepingGameLambda();
 
 //        try {
 //            GameInfoDTO createdGameInfoDTO = createScorekeepingGameLambda.createGameInfo(gameScorekeepingDTO.getGameInfo(), gameScorekeepingDTO.getSeason().getId());
@@ -37,5 +34,10 @@ public class Main {
 //
 //            System.out.println(e.getMessage());
 //        }
+
+        YearlyTeamStatsLambda yearlyTeamStatsLambda = new YearlyTeamStatsLambda();
+
+        var yearlyTeamStats = yearlyTeamStatsLambda.getYearlyTeamStats(2025);
+        System.out.println(yearlyTeamStats);
     }
 }
