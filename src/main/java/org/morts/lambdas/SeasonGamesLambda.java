@@ -51,8 +51,9 @@ public class SeasonGamesLambda implements RequestHandler<APIGatewayProxyRequestE
     public SeasonGames getSeasonResults(Integer seasonId) throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-        PreparedStatement preparedStatement = connection.prepareStatement("select game_info.*, s.session, s.year from game_info\n" +
+        PreparedStatement preparedStatement = connection.prepareStatement("select game_info.*, s.session, s.year, o.team_name as opponent_name from game_info\n" +
                 "left join seasons s on s.season_id = game_info.season_id\n" +
+                "left join opponents o on o.opponent_id = game_info.opponent_id\n" +
                 "where s.season_id = ?;");
         preparedStatement.setInt(1, seasonId);
         ResultSet rs = preparedStatement.executeQuery();
@@ -70,7 +71,7 @@ public class SeasonGamesLambda implements RequestHandler<APIGatewayProxyRequestE
                     .runsAgainst(rs.getInt("runs_against"))
                     .opponent(Opponent.builder()
                             .id(rs.getInt("opponent_id"))
-                            .teamName("opponent_team_name")
+                            .teamName(rs.getString("opponent_name"))
                             .build())
                     .field(rs.getString("field"))
                     .temperature(rs.getInt("temperature"))
