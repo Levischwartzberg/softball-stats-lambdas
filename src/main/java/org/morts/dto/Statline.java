@@ -22,6 +22,7 @@ public class Statline {
     private double obp;
     private double slg;
     private double ops;
+    private Integer wrcPlus;
 
     @Override
     public String toString() {

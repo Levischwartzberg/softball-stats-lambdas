@@ -69,6 +69,14 @@ public final class StatCalculatorUtil {
 
         List<PlayerStatline> playerStatlines = new ArrayList<>();
 
+        boolean hasWrcPlus = false;
+        try {
+            rs.findColumn("wrc_plus");
+            hasWrcPlus = true;
+        } catch (SQLException e) {
+            hasWrcPlus = false;
+        }
+
         while (rs.next()) {
             int hits = rs.getInt("hits");
             int singles = rs.getInt("singles");
@@ -95,6 +103,7 @@ public final class StatCalculatorUtil {
                                     .obp(calculateOBP(hits, atBats, walks))
                                     .slg(calculateSLG(singles, doubles, triples, homeruns, atBats))
                                     .ops(calculateOBP(hits, atBats, walks) + calculateSLG(singles, doubles, triples, homeruns, atBats))
+                                    .wrcPlus(hasWrcPlus ? rs.getInt("wrc_plus") : null)
                                     .build()
                     )
                     .player(

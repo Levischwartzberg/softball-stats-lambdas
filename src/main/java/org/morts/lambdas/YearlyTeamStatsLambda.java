@@ -46,23 +46,74 @@ public class YearlyTeamStatsLambda implements RequestHandler<APIGatewayProxyRequ
     public List<PlayerStatline> getYearlyTeamStats(Integer year) throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-        PreparedStatement preparedStatement = connection.prepareStatement("select at_bats_with_rbi.player_id as player_id, at_bats_with_rbi.first_name, at_bats_with_rbi.last_name, count(distinct at_bats_with_rbi.game_info_id) as games, sum(at_bats_with_rbi.ab) as at_bats, sum(at_bats_with_rbi.hit) as hits, sum(at_bats_with_rbi.single) as singles, sum(at_bats_with_rbi.`double`) as doubles, sum(at_bats_with_rbi.triple) as triples, sum(at_bats_with_rbi.homerun) as homeruns, sum(at_bats_with_rbi.walk) as walks, sum(at_bats_with_rbi.rbi) as rbi, runs\n" +
-                "    from (select p.first_name, p.last_name, ab, hit, single, `double`, triple, homerun, walk, at_bats.player_id, abr.rbi as rbi, gi.game_info_id as game_info_id from at_bats\n" +
-                "    left join innings i on at_bats.inning_id = i.inning_id\n" +
-                "    left join game_info gi on i.game_info_id = gi.game_info_id\n" +
-                "    left join seasons s on gi.season_id = s.season_id\n" +
-                "    left join players p on at_bats.player_id = p.player_id\n" +
-                "    left join (select count(*) as rbi, at_bat_id from at_bat_runs group by at_bat_id) abr on at_bats.at_bat_id = abr.at_bat_id\n" +
-                "    where s.year = ?) as at_bats_with_rbi\n" +
-                "    left join (select count(*) as runs, at_bat_runs.player_id from at_bat_runs\n" +
-                "    inner join at_bats a on at_bat_runs.at_bat_id = a.at_bat_id\n" +
-                "    inner join innings i2 on a.inning_id = i2.inning_id\n" +
-                "    inner join game_info g on i2.game_info_id = g.game_info_id\n" +
-                "    inner join seasons s2 on g.season_id = s2.season_id\n" +
-                "    where s2.year = ?\n" +
-                "    group by at_bat_runs.player_id) abrs on at_bats_with_rbi.player_id = abrs.player_id\n" +
-                "    group by at_bats_with_rbi.first_name, at_bats_with_rbi.last_name\n" +
-                "    order by at_bats desc;");
+        PreparedStatement preparedStatement = connection.prepareStatement("SELECT\n" +
+                "    at_bats_with_rbi.player_id AS player_id,\n" +
+                "    at_bats_with_rbi.first_name,\n" +
+                "    at_bats_with_rbi.last_name,\n" +
+                "    COUNT(DISTINCT at_bats_with_rbi.game_info_id) AS games,\n" +
+                "    SUM(at_bats_with_rbi.ab) AS at_bats,\n" +
+                "    SUM(at_bats_with_rbi.hit) AS hits,\n" +
+                "    SUM(at_bats_with_rbi.single) AS singles,\n" +
+                "    SUM(at_bats_with_rbi.`double`) AS doubles,\n" +
+                "    SUM(at_bats_with_rbi.triple) AS triples,\n" +
+                "    SUM(at_bats_with_rbi.homerun) AS homeruns,\n" +
+                "    SUM(at_bats_with_rbi.walk) AS walks,\n" +
+                "    SUM(at_bats_with_rbi.rbi) AS rbi,\n" +
+                "    runs,\n" +
+                "    ROUND(\n" +
+                "        (\n" +
+                "            (SUM(at_bats_with_rbi.ab) - SUM(at_bats_with_rbi.hit)) * ov_out.runs_above_average +\n" +
+                "            SUM(at_bats_with_rbi.walk) * ov_walk.runs_above_average +\n" +
+                "            SUM(at_bats_with_rbi.single) * ov_single.runs_above_average +\n" +
+                "            SUM(at_bats_with_rbi.`double`) * ov_double.runs_above_average +\n" +
+                "            SUM(at_bats_with_rbi.triple) * ov_triple.runs_above_average +\n" +
+                "            SUM(at_bats_with_rbi.homerun) * ov_hr.runs_above_average\n" +
+                "            ) * 100 / (SUM(at_bats_with_rbi.ab) + SUM(at_bats_with_rbi.walk)) + 100\n" +
+                "        ) AS wrc_plus\n" +
+                "FROM (\n" +
+                "         SELECT\n" +
+                "             p.first_name,\n" +
+                "             p.last_name,\n" +
+                "             ab,\n" +
+                "             hit,\n" +
+                "             single,\n" +
+                "             `double`,\n" +
+                "             triple,\n" +
+                "             homerun,\n" +
+                "             walk,\n" +
+                "             at_bats.player_id,\n" +
+                "             abr.rbi AS rbi,\n" +
+                "             gi.game_info_id AS game_info_id\n" +
+                "         FROM at_bats\n" +
+                "                  LEFT JOIN innings i ON at_bats.inning_id = i.inning_id\n" +
+                "                  LEFT JOIN game_info gi ON i.game_info_id = gi.game_info_id\n" +
+                "                  LEFT JOIN seasons s ON gi.season_id = s.season_id\n" +
+                "                  LEFT JOIN players p ON at_bats.player_id = p.player_id\n" +
+                "                  LEFT JOIN (\n" +
+                "             SELECT COUNT(*) AS rbi, at_bat_id\n" +
+                "             FROM at_bat_runs\n" +
+                "             GROUP BY at_bat_id\n" +
+                "         ) abr ON at_bats.at_bat_id = abr.at_bat_id\n" +
+                "         WHERE s.year = ?\n" +
+                "     ) AS at_bats_with_rbi\n" +
+                "         LEFT JOIN (\n" +
+                "    SELECT COUNT(*) AS runs, at_bat_runs.player_id\n" +
+                "    FROM at_bat_runs\n" +
+                "             INNER JOIN at_bats a ON at_bat_runs.at_bat_id = a.at_bat_id\n" +
+                "             INNER JOIN innings i2 ON a.inning_id = i2.inning_id\n" +
+                "             INNER JOIN game_info g ON i2.game_info_id = g.game_info_id\n" +
+                "             INNER JOIN seasons s2 ON g.season_id = s2.season_id\n" +
+                "    WHERE s2.year = ?\n" +
+                "    GROUP BY at_bat_runs.player_id\n" +
+                ") abrs ON at_bats_with_rbi.player_id = abrs.player_id\n" +
+                "         JOIN outcome_run_values ov_out ON ov_out.result = 'OUT'\n" +
+                "         JOIN outcome_run_values ov_walk ON ov_walk.result = 'WALK'\n" +
+                "         JOIN outcome_run_values ov_single ON ov_single.result = 'SINGLE'\n" +
+                "         JOIN outcome_run_values ov_double ON ov_double.result = 'DOUBLE'\n" +
+                "         JOIN outcome_run_values ov_triple ON ov_triple.result = 'TRIPLE'\n" +
+                "         JOIN outcome_run_values ov_hr ON ov_hr.result = 'HOMERUN'\n" +
+                "GROUP BY at_bats_with_rbi.player_id\n" +
+                "ORDER BY at_bats DESC;");
         preparedStatement.setInt(1, year);
         preparedStatement.setInt(2, year);
         ResultSet rs = preparedStatement.executeQuery();

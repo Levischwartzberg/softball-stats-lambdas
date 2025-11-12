@@ -35,9 +35,8 @@ public class Main {
 //            System.out.println(e.getMessage());
 //        }
 
-        YearlyTeamStatsLambda yearlyTeamStatsLambda = new YearlyTeamStatsLambda();
-
-        var yearlyTeamStats = yearlyTeamStatsLambda.getYearlyTeamStats(2025);
-        System.out.println(yearlyTeamStats);
+        TeamLifetimeStatsLambda teamLifetimeStatsLambda = new TeamLifetimeStatsLambda();
+        var stats = teamLifetimeStatsLambda.getTeamLifetimeStats();
+        System.out.println(stats);
     }
 }
