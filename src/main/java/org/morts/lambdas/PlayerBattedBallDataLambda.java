@@ -50,7 +50,7 @@ public class PlayerBattedBallDataLambda implements RequestHandler<APIGatewayProx
     public PlayerBattedBallDataDTO getPlayerBattedBallData(Integer playerId) throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-        PreparedStatement preparedStatement = connection.prepareStatement("select\n" +
+        PreparedStatement preparedStatement = connection.prepareStatement("select bbd.result, bbd.exit_velocity, bbd.region, bbd.launch_angle, orv.runs_above_average from (select\n" +
                 "    exit_velocity,\n" +
                 "    launch_angle,\n" +
                 "    region,\n" +
@@ -66,17 +66,13 @@ public class PlayerBattedBallDataLambda implements RequestHandler<APIGatewayProx
                 "where player_id = ?\n" +
                 "  and (exit_velocity is not null\n" +
                 "        or region is not null\n" +
-                "        or launch_angle is not null);");
+                "        or launch_angle is not null)) as bbd\n" +
+                "left join outcome_run_values orv on bbd.result = orv.result;");
         preparedStatement.setInt(1, playerId);
         ResultSet rs = preparedStatement.executeQuery();
 
         List<BattedBallDataDTO> battedBallDataDTOList = new ArrayList<>();
         while (rs.next()) {
-
-            Integer exit_velocity = rs.getInt("exit_velocity");
-            String launch_angle = rs.getString("launch_angle");
-            String region = rs.getString("region");
-            String result = rs.getString("result");
 
             BattedBallDataDTO battedBallDataDTO = BattedBallDataDTO.builder()
                     .exitVelocity(rs.getInt("exit_velocity"))
@@ -89,6 +85,7 @@ public class PlayerBattedBallDataLambda implements RequestHandler<APIGatewayProx
                     .result(rs.getString("result") != null
                             ? ResultENUM.valueOf(rs.getString("result"))
                             : null)
+                    .runsAboveAverage(rs.getDouble("runs_above_average"))
                     .build();
 
             battedBallDataDTOList.add(battedBallDataDTO);

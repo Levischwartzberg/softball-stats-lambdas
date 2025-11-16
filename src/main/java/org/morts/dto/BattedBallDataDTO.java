@@ -19,6 +19,7 @@ public class BattedBallDataDTO {
     LaunchAngleENUM launchAngle;
     RegionENUM region;
     ResultENUM result;
+    Double runsAboveAverage;
 
     @Override
     public String toString() {
