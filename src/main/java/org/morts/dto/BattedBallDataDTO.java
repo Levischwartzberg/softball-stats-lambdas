@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.morts.domain.Player;
 import org.morts.enumeration.LaunchAngleENUM;
 import org.morts.enumeration.RegionENUM;
 import org.morts.enumeration.ResultENUM;
@@ -20,6 +21,8 @@ public class BattedBallDataDTO {
     RegionENUM region;
     ResultENUM result;
     Double runsAboveAverage;
+    Player player;
+    Integer gameInfoId;
 
     @Override
     public String toString() {

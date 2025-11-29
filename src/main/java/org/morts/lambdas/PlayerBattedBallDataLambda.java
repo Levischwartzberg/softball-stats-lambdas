@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import org.morts.domain.Player;
 import org.morts.dto.BattedBallDataDTO;
 import org.morts.dto.PlayerBattedBallDataDTO;
 import org.morts.enumeration.LaunchAngleENUM;
@@ -50,24 +51,45 @@ public class PlayerBattedBallDataLambda implements RequestHandler<APIGatewayProx
     public PlayerBattedBallDataDTO getPlayerBattedBallData(Integer playerId) throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-        PreparedStatement preparedStatement = connection.prepareStatement("select bbd.result, bbd.exit_velocity, bbd.region, bbd.launch_angle, orv.runs_above_average from (select\n" +
-                "    exit_velocity,\n" +
-                "    launch_angle,\n" +
-                "    region,\n" +
-                "    case\n" +
-                "        when single = 1 then 'SINGLE'\n" +
-                "        when `double` = 1 then 'DOUBLE'\n" +
-                "        when triple = 1 then'TRIPLE'\n" +
-                "        when homerun = 1 then 'HOMERUN'\n" +
-                "        when hit = 0 then 'OUT'\n" +
-                "        else 'Unknown'\n" +
-                "        end as result\n" +
-                "from at_bats\n" +
-                "where player_id = ?\n" +
-                "  and (exit_velocity is not null\n" +
-                "        or region is not null\n" +
-                "        or launch_angle is not null)) as bbd\n" +
-                "left join outcome_run_values orv on bbd.result = orv.result;");
+        PreparedStatement preparedStatement = connection.prepareStatement("select\n" +
+                "    bbd.result,\n" +
+                "    bbd.exit_velocity,\n" +
+                "    bbd.region,\n" +
+                "    bbd.launch_angle,\n" +
+                "    orv.runs_above_average,\n" +
+                "    bbd.first_name,\n" +
+                "    bbd.last_name,\n" +
+                "    bbd.player_id,\n" +
+                "    bbd.game_info_id\n" +
+                "from (\n" +
+                "         select\n" +
+                "             exit_velocity,\n" +
+                "             launch_angle,\n" +
+                "             region,\n" +
+                "             p.first_name,\n" +
+                "             p.last_name,\n" +
+                "             p.player_id,\n" +
+                "             i.game_info_id,\n" +
+                "             case\n" +
+                "                 when single = 1 then 'SINGLE'\n" +
+                "                 when `double` = 1 then 'DOUBLE'\n" +
+                "                 when triple = 1 then 'TRIPLE'\n" +
+                "                 when homerun = 1 then 'HOMERUN'\n" +
+                "                 when hit = 0 then 'OUT'\n" +
+                "                 else 'unknown'\n" +
+                "                 end as result\n" +
+                "         from at_bats\n" +
+                "                  left join innings i on at_bats.inning_id = i.inning_id\n" +
+                "                  left join players p on at_bats.player_id = p.player_id\n" +
+                "         where p.player_id = ?\n" +
+                "           and (\n" +
+                "             exit_velocity is not null\n" +
+                "                 or region is not null\n" +
+                "                 or launch_angle is not null\n" +
+                "             )\n" +
+                "     ) as bbd\n" +
+                "         left join outcome_run_values as orv\n" +
+                "                   on bbd.result = orv.result;");
         preparedStatement.setInt(1, playerId);
         ResultSet rs = preparedStatement.executeQuery();
 
@@ -86,6 +108,14 @@ public class PlayerBattedBallDataLambda implements RequestHandler<APIGatewayProx
                             ? ResultENUM.valueOf(rs.getString("result"))
                             : null)
                     .runsAboveAverage(rs.getDouble("runs_above_average"))
+                    .player(
+                            Player.builder()
+                                    .firstName(rs.getString("first_name"))
+                                    .lastName(rs.getString("last_name"))
+                                    .id(rs.getInt("player_id"))
+                                    .build()
+                    )
+                    .gameInfoId(rs.getInt("game_info_id"))
                     .build();
 
             battedBallDataDTOList.add(battedBallDataDTO);
