@@ -35,8 +35,8 @@ public class Main {
 //            System.out.println(e.getMessage());
 //        }
 
-        PlayerLifetimeStatsLambda lambda = new PlayerLifetimeStatsLambda();
-        var data = lambda.getPlayerLifetimeStats(2);
-        System.out.println(data.toString());
+        PlayerBattedBallDataLambda playerBattedBallDataLambda = new PlayerBattedBallDataLambda();
+        var playerBattedBallDataDTO = playerBattedBallDataLambda.getPlayerBattedBallData(2);
+        System.out.println(playerBattedBallDataDTO.toString());
     }
 }
