@@ -4,12 +4,14 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import org.morts.dto.SeasonStatline;
+import org.morts.dto.YearlyStatline;
 import org.morts.util.StatCalculatorUtil;
-import org.morts.dto.Statline;
 
 import java.sql.*;
+import java.util.List;
 
-public class PlayerLifetimeStatsLambda implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class PlayerYearlyStatsLambda implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     String dbUrl = System.getenv("DB_URL");
     String dbUser = System.getenv("DB_USER");
@@ -25,9 +27,9 @@ public class PlayerLifetimeStatsLambda implements RequestHandler<APIGatewayProxy
                     .withBody("Missing playerId parameter");
         }
 
-        Statline statline;
+        List<YearlyStatline> yearlyStatlines;
         try {
-            statline = getPlayerLifetimeStats(Integer.valueOf(playerId));
+            yearlyStatlines = getPlayerYearlyStats(Integer.valueOf(playerId));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
@@ -36,17 +38,17 @@ public class PlayerLifetimeStatsLambda implements RequestHandler<APIGatewayProxy
 
         return new APIGatewayProxyResponseEvent()
                 .withStatusCode(200)
-                .withBody(statline.toString());
+                .withBody(yearlyStatlines.toString());
     }
 
-    public PlayerLifetimeStatsLambda() {
+    public PlayerYearlyStatsLambda() {
     }
 
-    public Statline getPlayerLifetimeStats(Integer playerId) throws SQLException, ClassNotFoundException {
+    public List<YearlyStatline> getPlayerYearlyStats(Integer playerId) throws SQLException, ClassNotFoundException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection connection = DriverManager.getConnection(this.dbUrl, this.dbUser, this.dbPassword);
-
         PreparedStatement preparedStatement = connection.prepareStatement("select\n" +
+                "    at_bats_with_rbi.year as year,\n" +
                 "    count(distinct at_bats_with_rbi.game_info_id) as games,\n" +
                 "    sum(at_bats_with_rbi.ab) as at_bats,\n" +
                 "    sum(at_bats_with_rbi.hit) as hits,\n" +
@@ -102,16 +104,18 @@ public class PlayerLifetimeStatsLambda implements RequestHandler<APIGatewayProxy
                 "             inner join game_info g on i2.game_info_id = g.game_info_id\n" +
                 "             inner join seasons s2 on g.season_id = s2.season_id\n" +
                 "    where at_bat_runs.player_id = ?\n" +
+                "    group by s2.year\n" +
                 ") as runs on at_bats_with_rbi.year = runs.s2_year\n" +
                 "    join outcome_run_values ov_out on ov_out.result = 'OUT'\n" +
                 "    join outcome_run_values ov_walk on ov_walk.result = 'WALK'\n" +
                 "    join outcome_run_values ov_single on ov_single.result = 'SINGLE'\n" +
                 "    join outcome_run_values ov_double on ov_double.result = 'DOUBLE'\n" +
                 "    join outcome_run_values ov_triple on ov_triple.result = 'TRIPLE'\n" +
-                "    join outcome_run_values ov_hr on ov_hr.result = 'HOMERUN';");
+                "    join outcome_run_values ov_hr on ov_hr.result = 'HOMERUN'\n" +
+                "group by year;");
         preparedStatement.setInt(1, playerId);
         preparedStatement.setInt(2, playerId);
         ResultSet rs = preparedStatement.executeQuery();
-        return StatCalculatorUtil.computeLifetimeStatline(rs);
+        return StatCalculatorUtil.getYearlyStats(rs);
     }
 }

@@ -35,8 +35,8 @@ public class Main {
 //            System.out.println(e.getMessage());
 //        }
 
-        TeamLifetimeStatsLambda teamLifetimeStatsLambda = new TeamLifetimeStatsLambda();
-        var stats = teamLifetimeStatsLambda.getTeamLifetimeStats();
-        System.out.println(stats);
+        PlayerLifetimeStatsLambda lambda = new PlayerLifetimeStatsLambda();
+        var data = lambda.getPlayerLifetimeStats(2);
+        System.out.println(data.toString());
     }
 }
