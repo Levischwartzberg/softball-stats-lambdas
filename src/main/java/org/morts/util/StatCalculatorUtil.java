@@ -5,6 +5,7 @@ import org.morts.domain.Season;
 import org.morts.dto.PlayerStatline;
 import org.morts.dto.SeasonStatline;
 import org.morts.dto.Statline;
+import org.morts.dto.YearlyStatline;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -65,6 +66,46 @@ public final class StatCalculatorUtil {
         return seasonStatlines;
     }
 
+    public static List<YearlyStatline> getYearlyStats(ResultSet rs) throws SQLException {
+
+        List<YearlyStatline> yearlyStatlines = new ArrayList<>();
+
+        while (rs.next()) {
+            int games = rs.getInt("games");
+            int hits = rs.getInt("hits");
+            int singles = rs.getInt("singles");
+            int doubles = rs.getInt("doubles");
+            int triples = rs.getInt("triples");
+            int homeruns = rs.getInt("homeruns");
+            int walks = rs.getInt("walks");
+            int atBats = rs.getInt("at_bats");
+
+            YearlyStatline yearlyStatline = YearlyStatline.builder()
+                    .statline(
+                            Statline.builder()
+                                    .games(games)
+                                    .atBats(atBats)
+                                    .hits(hits)
+                                    .singles(singles)
+                                    .doubles(doubles)
+                                    .triples(triples)
+                                    .homeruns(homeruns)
+                                    .walks(walks)
+                                    .rbi(rs.getInt("rbi"))
+                                    .runs(rs.getInt("runs"))
+                                    .avg((double) hits / (double) atBats)
+                                    .obp(calculateOBP(hits, atBats, walks))
+                                    .slg(calculateSLG(singles, doubles, triples, homeruns, atBats))
+                                    .ops(calculateOBP(hits, atBats, walks) + calculateSLG(singles, doubles, triples, homeruns, atBats))
+                                    .wrcPlus(rs.getInt("wrc_plus"))
+                                    .build()
+                    )
+                    .year(rs.getInt("year")).build();
+            yearlyStatlines.add(yearlyStatline);
+        }
+        return yearlyStatlines;
+    }
+
     public static List<PlayerStatline> getSeasonTeamStats(ResultSet rs) throws SQLException {
 
         List<PlayerStatline> playerStatlines = new ArrayList<>();
@@ -118,45 +159,37 @@ public final class StatCalculatorUtil {
         return playerStatlines;
     }
 
-    public static Statline computeStatlineFromGameIterator(ResultSet rs) throws SQLException {
-        Integer games = 0;
-        Integer atBats = 0;
-        Integer hits = 0;
-        Integer singles = 0;
-        Integer doubles = 0;
-        Integer triples = 0;
-        Integer homeruns = 0;
-        Integer walks = 0;
-        Integer runs = 0;
+    public static Statline computeLifetimeStatline(ResultSet rs) throws SQLException {
 
-        Integer rbi;
-        for(rbi = 0; rs.next(); rbi = rbi + rs.getInt("rbi")) {
-            games = games + 1;
-            atBats = atBats + rs.getInt("at_bats");
-            hits = hits + rs.getInt("hits");
-            singles = singles + rs.getInt("singles");
-            doubles = doubles + rs.getInt("doubles");
-            triples = triples + rs.getInt("triples");
-            homeruns = homeruns + rs.getInt("homeruns");
-            walks = walks + rs.getInt("walks");
-            runs = runs + rs.getInt("runs");
+        Statline statline = null;
+        while (rs.next()) {
+            int hits = rs.getInt("hits");
+            int singles = rs.getInt("singles");
+            int doubles = rs.getInt("doubles");
+            int triples = rs.getInt("triples");
+            int homeruns = rs.getInt("homeruns");
+            int walks = rs.getInt("walks");
+            int atBats = rs.getInt("at_bats");
+
+            statline = Statline.builder()
+                    .games(rs.getInt("games"))
+                    .atBats(atBats)
+                    .hits(hits)
+                    .singles(singles)
+                    .doubles(doubles)
+                    .triples(triples)
+                    .homeruns(homeruns)
+                    .walks(walks)
+                    .runs(rs.getInt("runs"))
+                    .rbi(rs.getInt("rbi"))
+                    .avg((double)hits / (double)atBats)
+                    .obp(calculateOBP(hits, atBats, walks))
+                    .slg(calculateSLG(singles, doubles, triples, homeruns, atBats))
+                    .ops(calculateOBP(hits, atBats, walks) + calculateSLG(singles, doubles, triples, homeruns, atBats))
+                    .wrcPlus(rs.getInt("wrc_plus"))
+                    .build();
         }
-
-        return Statline.builder()
-                .games(games)
-                .atBats(atBats)
-                .hits(hits)
-                .singles(singles)
-                .doubles(doubles)
-                .triples(triples)
-                .homeruns(homeruns)
-                .walks(walks)
-                .runs(runs)
-                .rbi(rbi)
-                .avg((double)hits / (double)atBats)
-                .obp(calculateOBP(hits, atBats, walks))
-                .slg(calculateSLG(singles, doubles, triples, homeruns, atBats))
-                .ops(calculateOBP(hits, atBats, walks) + calculateSLG(singles, doubles, triples, homeruns, atBats)).build();
+        return statline;
     }
 
     private StatCalculatorUtil() {
